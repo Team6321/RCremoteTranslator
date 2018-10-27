@@ -9,10 +9,9 @@ See Repo: https://github.com/Team6321/RCremoteTranslator
 #define LEFT_PIN 4
 #define RIGHT_PIN 5
 
-volatile int Left;
-volatile int Right;
-volatile int Left_Count;
-volatile int Right_Count;
+volatile int LeftCount;
+volatile int RightCount;
+volatile int Count;
 
 int freqStep = 8; // This is the delay step in Microseconds
 // It is calculated based on the period of the input pulse (1ms - 2 ms)
@@ -20,8 +19,8 @@ int freqStep = 8; // This is the delay step in Microseconds
 
 
 struct scalePulses {
-  float Left; 
-  float Right;
+  float Throttle; 
+  float Steering;
 };
 
 
@@ -44,18 +43,18 @@ void setup() {
 
   // register pulse out pin (hw interrupt)
   short interruptPin = digitalPinToInterrupt(THROTTLE_PIN);
-  attachInterrupt(interruptPin, resetOutPulses);
+  attachInterrupt(interruptPin, resetOutPulses, RISING);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   
-  scalePulses scaledValues = setPulseOut();
+  scalePulses scaledValues = readPulses();
 
-  TranslateArcadeToTank(scaledValues.Left, scaledValues.Right);
+  TranslateArcadeToTank(scaledValues.Steering, scaledValues.Throttle);
 }
 
-struct scalePulses setPulseOut() {
+struct scalePulses readPulses() {
   float steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
   
@@ -71,28 +70,48 @@ struct scalePulses setPulseOut() {
 }
 
 void resetOutPulses(){
-  Left_Count = Right_Count = 0;
-  digitalWrite(LEFT_PIN + i, HIGH);
-  digitalWrite(RIGHT_PIN + i, HIGH);  
+  Count = 0;
+  digitalWrite(LEFT_PIN, HIGH);
+  digitalWrite(RIGHT_PIN, HIGH);  
 }
 
-void TranslateArcadeToTank(int x, int y)
+void TranslateArcadeToTank(float x, float y)
 {
   float throttle = abs(y);
   float steering = abs(x);
+  float left, right;
 
   if (x > 0)
   {
-    Left = throttle - steering;
-    Right = max(throttle,steering);
+    left = throttle - steering;
+    right = max(throttle,steering);
   }
   else
   {
-    Left = max(throttle,steering);
-    Right = throttle - steering;
+    left = max(throttle,steering);
+    right = throttle - steering;
   }
 
-  float temp = Left;
-  Left = (y < 0)? -1 * Right : Left;
-  Right = (y < 0)? -1 * Right : Right;
+  if(y < 0){
+    float temp = left;
+    left = -right;
+    right = -temp;
+  }
+
+  LeftCount = map(left, -1, 1, 1000, 2000) / freqStep;
+  RightCount = map(right, -1, 1, 1000, 2000) / freqStep;
+
+}
+
+void setPulseOut(){
+
+    if(LeftCount > Count) {
+      digitalWrite(LEFT_PIN, LOW);
+    }
+    
+    if(RightCount > Count) {
+      digitalWrite(RIGHT_PIN, LOW);
+    }
+
+    ++Count; 
 }
