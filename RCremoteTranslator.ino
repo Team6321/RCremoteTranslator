@@ -18,6 +18,13 @@ int freqStep = 8; // This is the delay step in Microseconds
 // It is calculated based on the period of the input pulse (1ms - 2 ms)
 // and the number of speed steps you want (255). 
 
+
+struct scalePulses {
+  float Left; 
+  float Right;
+};
+
+
 void setup() {
   // set pin modes
   pinMode(THROTTLE_PIN, INPUT);
@@ -42,11 +49,25 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  
+  scalePulses scaledValues = setPulseOut();
 
+  TranslateArcadeToTank(scaledValues.Left, scaledValues.Right);
 }
 
-void setPulseOut() {
+struct scalePulses setPulseOut() {
+  float steeringDuration, throttleDuration;
+  float scaledSteeringDuration, scaledThrottleDuration;
   
+  steeringDuration = pulseIn(STEERING_PIN, HIGH);
+  throttleDuration = pulseIn(THROTTLE_PIN, HIGH);
+
+  scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
+  scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
+
+  struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
+
+  return scaledValues;
 }
 
 void resetOutPulses(){
@@ -55,3 +76,23 @@ void resetOutPulses(){
   digitalWrite(RIGHT_PIN + i, HIGH);  
 }
 
+void TranslateArcadeToTank(int x, int y)
+{
+  float throttle = abs(y);
+  float steering = abs(x);
+
+  if (x > 0)
+  {
+    Left = throttle - steering;
+    Right = max(throttle,steering);
+  }
+  else
+  {
+    Left = max(throttle,steering);
+    Right = throttle - steering;
+  }
+
+  float temp = Left;
+  Left = (y < 0)? -1 * Right : Left;
+  Right = (y < 0)? -1 * Right : Right;
+}
