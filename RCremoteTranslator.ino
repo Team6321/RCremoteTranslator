@@ -27,9 +27,17 @@ void setup() {
   pinMode(RIGHT_PIN, OUTPUT);
   
   // register timer
+  Timer1.initialize(freqStep);                      // Initialize TimerOne library for the freq we need
+  Timer1.attachInterrupt(setPulseOut, freqStep); // call a function (second param) every (first param) microseconds
+  // Use the TimerOne Library to attach an interrupt
+  // to the function we use to check to see if it is 
+  // the right time to fire the triac.  This function 
+  // will now run every freqStep in microseconds.     
   
 
   // register pulse out pin (hw interrupt)
+  short interruptPin = digitalPinToInterrupt(THROTTLE_PIN);
+  attachInterrupt(interruptPin, resetOutPulses);
 }
 
 void loop() {
@@ -39,5 +47,11 @@ void loop() {
 
 void setPulseOut() {
   
+}
+
+void resetOutPulses(){
+  Left_Count = Right_Count = 0;
+  digitalWrite(LEFT_PIN + i, HIGH);
+  digitalWrite(RIGHT_PIN + i, HIGH);  
 }
 
