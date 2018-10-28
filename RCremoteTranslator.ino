@@ -44,6 +44,8 @@ void setup() {
   // register pulse out pin (hw interrupt)
   short interruptPin = digitalPinToInterrupt(THROTTLE_PIN);
   attachInterrupt(interruptPin, resetOutPulses, RISING);
+
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -58,13 +60,20 @@ struct scalePulses readPulses() {
   float steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
   
-  steeringDuration = pulseIn(STEERING_PIN, HIGH);
-  throttleDuration = pulseIn(THROTTLE_PIN, HIGH);
+  steeringDuration = pulseIn(STEERING_PIN, HIGH, 3000);
+  throttleDuration = pulseIn(THROTTLE_PIN, HIGH, 3000);
 
   scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
   scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
 
   struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
+
+  Serial.print("Throttle: ");
+  Serial.println(scaledValues.Throttle);
+
+  
+  Serial.print("Steering: ");
+  Serial.println(scaledValues.Steering);
 
   return scaledValues;
 }
