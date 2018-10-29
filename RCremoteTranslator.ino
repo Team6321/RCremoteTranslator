@@ -66,6 +66,14 @@ struct scalePulses readPulses() {
   scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
   scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
 
+  // in the event of a timeout, set values to 0
+  if(steeringDuration == 0) {
+    scaledSteeringDuration = 0;
+  }
+  if(throttleDuration == 0) {
+    scaledThrottleDuration = 0;
+  }
+  
   struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
 
   // TODO: disable te following lines once this is tested.
