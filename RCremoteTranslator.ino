@@ -60,8 +60,8 @@ struct scalePulses readPulses() {
   int steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
   
-  steeringDuration = pulseIn(STEERING_PIN, HIGH, 3000);
-  throttleDuration = pulseIn(THROTTLE_PIN, HIGH, 3000);
+  steeringDuration = pulseIn(STEERING_PIN, HIGH, 25000);
+  throttleDuration = pulseIn(THROTTLE_PIN, HIGH, 25000);
 
   scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
   scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
