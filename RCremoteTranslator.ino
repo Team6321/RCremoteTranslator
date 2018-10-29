@@ -57,7 +57,7 @@ void loop() {
 }
 
 struct scalePulses readPulses() {
-  float steeringDuration, throttleDuration;
+  int steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
   
   steeringDuration = pulseIn(STEERING_PIN, HIGH, 3000);
@@ -68,12 +68,16 @@ struct scalePulses readPulses() {
 
   struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
 
-  Serial.print("Throttle: ");
-  Serial.println(scaledValues.Throttle);
-
+  char buffer[100]; // you have to be aware of how long your data can be
+                 // not forgetting unprintable and null term chars
+  sprintf(buffer,"Raw: %i,\t%i\t\t", steeringDuration, throttleDuration);
+  Serial.print(buffer);
   
-  Serial.print("Steering: ");
-  Serial.println(scaledValues.Steering);
+  // sprintf does not support floats . . .
+  Serial.print("Scaled: ");
+  Serial.print(scaledValues.Steering);
+  Serial.print(",\t");
+  Serial.print(scaledValues.Throttle);
 
   return scaledValues;
 }
