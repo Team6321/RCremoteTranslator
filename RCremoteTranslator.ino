@@ -68,6 +68,7 @@ struct scalePulses readPulses() {
 
   struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
 
+  // TODO: disable te following lines once this is tested.
   char buffer[100]; // you have to be aware of how long your data can be
                  // not forgetting unprintable and null term chars
   sprintf(buffer,"Raw: %i,\t%i\t\t", steeringDuration, throttleDuration);
@@ -113,7 +114,18 @@ void TranslateArcadeToTank(float x, float y)
 
   LeftCount = map(left, -1, 1, 1000, 2000) / freqStep;
   RightCount = map(right, -1, 1, 1000, 2000) / freqStep;
-
+  
+  /* TODO: enable this once read-in is debugged
+  Serial.print("Values: ");
+  Serial.print(left);
+  Serial.print(",\t");
+  Serial.print(right);
+  Serial.print("\t\t");
+  Serial.print("Scaled: ");
+  Serial.print(LeftCount);
+  Serial.print(",\t");
+  Serial.print(Rightcount);
+  */
 }
 
 void setPulseOut(){
