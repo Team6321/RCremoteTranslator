@@ -23,7 +23,11 @@ struct scalePulses {
   float Steering;
 };
 
-
+/* This method is run once on  boot and is responsible for:
+* Setting up input and output pins
+* Initializing the timer interrupt for setting the pulses out
+* Registering for a hardware interrupt to trigger start of pulse out.
+*/
 void setup() {
   // set pin modes
   pinMode(THROTTLE_PIN, INPUT);
@@ -48,14 +52,21 @@ void setup() {
   Serial.begin(9600);
 }
 
+/*
+Main code goes here, in our case, that means read the pulses coming from the remote, scale, and store them.
+*/
 void loop() {
-  // put your main code here, to run repeatedly:
-  
+ 
   scalePulses scaledValues = readPulses();
 
   TranslateArcadeToTank(scaledValues.Steering, scaledValues.Throttle);
 }
 
+/* read the pulses coming from the remote. 
+*   A pulse width of 1000 means full backwards, 
+*   A pulse width of 1500 means disable, and 
+*   A pulse width of 2000 means full forward
+*/
 struct scalePulses readPulses() {
   int steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
@@ -76,7 +87,7 @@ struct scalePulses readPulses() {
   
   struct scalePulses scaledValues = {scaledSteeringDuration, scaledThrottleDuration};
 
-  // TODO: disable te following lines once this is tested.
+  // TODO: disable the following lines once this is tested.
   char buffer[100]; // you have to be aware of how long your data can be
                  // not forgetting unprintable and null term chars
   sprintf(buffer,"Raw: %i,\t%i\t\t", steeringDuration, throttleDuration);
@@ -91,12 +102,18 @@ struct scalePulses readPulses() {
   return scaledValues;
 }
 
+/*
+* When we first start getting a pulse in, we know the period of writing the pulse has restarted, so reset the output pulses.
+*/
 void resetOutPulses(){
   Count = 0;
   digitalWrite(LEFT_PIN, HIGH);
   digitalWrite(RIGHT_PIN, HIGH);  
 }
 
+/*
+* Translated from FRC code library
+*/
 void TranslateArcadeToTank(float x, float y)
 {
   float throttle = abs(y);
@@ -136,6 +153,9 @@ void TranslateArcadeToTank(float x, float y)
   */
 }
 
+/*
+* On a timer pulse, evaluate if the outputs should still be high or not based on the current timer Count and the desired high counts for each.
+*/
 void setPulseOut(){
 
     if(LeftCount > Count) {
