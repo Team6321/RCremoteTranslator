@@ -3,7 +3,6 @@ This is code to take an RC remote's throttle and steering pulses, translate them
 
 See Repo: https://github.com/Team6321/RCremoteTranslator
 */
-#include<TimerOne.h>  // Avaiable from http://www.arduino.cc/playground/Code/Timer1
 #define THROTTLE_PIN 2
 #define STEERING_PIN 3
 #define LEFT_PIN 4
@@ -11,12 +10,6 @@ See Repo: https://github.com/Team6321/RCremoteTranslator
 
 volatile int LeftCount;
 volatile int RightCount;
-volatile int Count;
-
-int freqStep = 8; // This is the delay step in Microseconds
-// It is calculated based on the period of the input pulse (1ms - 2 ms)
-// and the number of speed steps you want (255). 
-
 
 struct scalePulses {
   float Throttle; 
@@ -36,18 +29,8 @@ void setup() {
   pinMode(LEFT_PIN, OUTPUT);
   pinMode(RIGHT_PIN, OUTPUT);
   
-  // register timer
-  Timer1.initialize(freqStep);                      // Initialize TimerOne library for the freq we need
-  Timer1.attachInterrupt(setPulseOut, freqStep); // call a function (second param) every (first param) microseconds
-  // Use the TimerOne Library to attach an interrupt
-  // to the function we use to check to see if it is 
-  // the right time to fire the triac.  This function 
-  // will now run every freqStep in microseconds.     
   
 
-  // register pulse out pin (hw interrupt)
-  short interruptPin = digitalPinToInterrupt(THROTTLE_PIN);
-  attachInterrupt(interruptPin, resetOutPulses, RISING);
 
   Serial.begin(9600);
 }
@@ -102,14 +85,7 @@ struct scalePulses readPulses() {
   return scaledValues;
 }
 
-/*
-* When we first start getting a pulse in, we know the period of writing the pulse has restarted, so reset the output pulses.
-*/
-void resetOutPulses(){
-  Count = 0;
-  digitalWrite(LEFT_PIN, HIGH);
-  digitalWrite(RIGHT_PIN, HIGH);  
-}
+
 
 /*
 * Translated from FRC code library
@@ -153,18 +129,18 @@ void TranslateArcadeToTank(float x, float y)
   */
 }
 
-/*
-* On a timer pulse, evaluate if the outputs should still be high or not based on the current timer Count and the desired high counts for each.
-*/
-void setPulseOut(){
-
-    if(LeftCount > Count) {
-      digitalWrite(LEFT_PIN, LOW);
-    }
-    
-    if(RightCount > Count) {
-      digitalWrite(RIGHT_PIN, LOW);
-    }
-
-    ++Count; 
+void pulseOut(int pin, unsigned long duration, bool level=HIGH) {
+  unsigned long delayTime = duration;
+  unsigned long longDelay = 0;
+  if (duration > 16000)
+  {
+    // delayMicro can only go up ~16k, so use millisecond delay for beyond that.
+    longDelay = duration / 1000;
+    delayTime = duration - (longDelay * 1000);
+    Serial.println(delayTime);
+  }
+  digitalWrite(pin, level);
+  delay(longDelay);
+  delayMicroseconds(delayTime);
+  digitalWrite(pin, !level);
 }
