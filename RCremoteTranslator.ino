@@ -8,13 +8,31 @@ See Repo: https://github.com/Team6321/RCremoteTranslator
 #define LEFT_PIN 4
 #define RIGHT_PIN 5
 
-volatile int LeftCount;
-volatile int RightCount;
+unsigned long LeftCount;
+unsigned long RightCount;
 
 struct scalePulses {
   float Throttle; 
   float Steering;
 };
+
+
+void pulseOut(int pin, unsigned long duration, bool level=HIGH) {
+  unsigned long delayTime = duration;
+  unsigned long longDelay = 0;
+  if (duration > 16000)
+  {
+    // delayMicro can only go up ~16k, so use millisecond delay for beyond that.
+    longDelay = duration / 1000;
+    delayTime = duration - (longDelay * 1000);
+    Serial.println(delayTime);
+  }
+  digitalWrite(pin, level);
+  delay(longDelay);
+  delayMicroseconds(delayTime);
+  digitalWrite(pin, !level);
+}
+
 
 /* This method is run once on  boot and is responsible for:
 * Setting up input and output pins
@@ -43,6 +61,8 @@ void loop() {
   scalePulses scaledValues = readPulses();
 
   TranslateArcadeToTank(scaledValues.Steering, scaledValues.Throttle);
+  pulseOut(LEFT_PIN, LeftCount);
+  pulseOut(RIGHT_PIN, RightCount); 
 }
 
 /* read the pulses coming from the remote. 
@@ -54,8 +74,8 @@ struct scalePulses readPulses() {
   int steeringDuration, throttleDuration;
   float scaledSteeringDuration, scaledThrottleDuration;
   
-  steeringDuration = pulseIn(STEERING_PIN, HIGH, 25000);
-  throttleDuration = pulseIn(THROTTLE_PIN, HIGH, 25000);
+  steeringDuration = pulseIn(STEERING_PIN, HIGH);
+  throttleDuration = pulseIn(THROTTLE_PIN, HIGH);
 
   scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
   scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
@@ -80,7 +100,7 @@ struct scalePulses readPulses() {
   Serial.print("Scaled: ");
   Serial.print(scaledValues.Steering);
   Serial.print(",\t");
-  Serial.print(scaledValues.Throttle);
+  Serial.println(scaledValues.Throttle);
 
   return scaledValues;
 }
@@ -113,8 +133,8 @@ void TranslateArcadeToTank(float x, float y)
     right = -temp;
   }
 
-  LeftCount = map(left, -1, 1, 1000, 2000) / freqStep;
-  RightCount = map(right, -1, 1, 1000, 2000) / freqStep;
+  LeftCount = map(left, -1, 1, 1000, 2000);
+  RightCount = map(right, -1, 1, 1000, 2000);
   
   /* TODO: enable this once read-in is debugged
   Serial.print("Values: ");
@@ -127,20 +147,4 @@ void TranslateArcadeToTank(float x, float y)
   Serial.print(",\t");
   Serial.print(Rightcount);
   */
-}
-
-void pulseOut(int pin, unsigned long duration, bool level=HIGH) {
-  unsigned long delayTime = duration;
-  unsigned long longDelay = 0;
-  if (duration > 16000)
-  {
-    // delayMicro can only go up ~16k, so use millisecond delay for beyond that.
-    longDelay = duration / 1000;
-    delayTime = duration - (longDelay * 1000);
-    Serial.println(delayTime);
-  }
-  digitalWrite(pin, level);
-  delay(longDelay);
-  delayMicroseconds(delayTime);
-  digitalWrite(pin, !level);
 }
