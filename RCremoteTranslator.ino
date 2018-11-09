@@ -33,6 +33,12 @@ void pulseOut(int pin, unsigned long duration, bool level=HIGH) {
   digitalWrite(pin, !level);
 }
 
+// from https://forum.arduino.cc/index.php?topic=3922.msg30006#msg30006
+float mapf(long x, long in_min, long in_max, long out_min, long out_max)
+{
+ return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
+}
+
 
 /* This method is run once on  boot and is responsible for:
 * Setting up input and output pins
@@ -77,8 +83,8 @@ struct scalePulses readPulses() {
   steeringDuration = pulseIn(STEERING_PIN, HIGH);
   throttleDuration = pulseIn(THROTTLE_PIN, HIGH);
 
-  scaledSteeringDuration = map(steeringDuration, 1000, 2000, -1, 1);
-  scaledThrottleDuration = map(throttleDuration, 1000, 2000, -1, 1);
+  scaledSteeringDuration = mapf(steeringDuration, 1000, 2000, -1, 1);
+  scaledThrottleDuration = mapf(throttleDuration, 1000, 2000, -1, 1);
 
   // in the event of a timeout, set values to 0
   if(steeringDuration == 0) {
@@ -133,8 +139,8 @@ void TranslateArcadeToTank(float x, float y)
     right = -temp;
   }
 
-  LeftCount = map(left, -1, 1, 1000, 2000);
-  RightCount = map(right, -1, 1, 1000, 2000);
+  LeftCount = map(left * 1000, -1000, 1000, 1000, 2000);
+  RightCount = map(right * 1000, -1000, 1000, 1000, 2000);
   
   /* TODO: enable this once read-in is debugged
   Serial.print("Values: ");
